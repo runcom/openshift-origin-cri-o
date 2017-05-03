@@ -43,6 +43,8 @@
       args:
         chdir: /root/src/github.com/openshift/origin
       shell: |
+              rm -rf ORIGIN_COMMIT
+              rm -rf ORIGIN_PKG_VERSION
               hack/build-base-images.sh && \
               OS_BUILD_ENV_PRESERVE=_output/local hack/env OS_ONLY_BUILD_PLATFORMS='linux/amd64' hack/build-rpm-release.sh && \
               systemctl restart docker && \
