@@ -34,13 +34,6 @@
               git clone https://github.com/openshift/origin /root/src/github.com/openshift/origin || true && \
               cd /root/src/github.com/openshift/origin && \
               git pull
-    - name: gather origin version
-      shell: |
-              git log -1 --pretty=%h > ORIGIN_COMMIT
-              cat ORIGIN_COMMIT
-      args:
-        chdir: /root/src/github.com/openshift/origin
-      register: origin_commit
     - name: enable and start docker
       systemd:
         name: docker
@@ -56,6 +49,13 @@
               hack/build-images.sh && \
               sed -i 's|go/src|root/src|' _output/local/releases/rpms/origin-local-release.repo && \
               sudo cp _output/local/releases/rpms/origin-local-release.repo /etc/yum.repos.d/
+    - name: gather origin version
+      shell: |
+              git log -1 --pretty=%h > ORIGIN_COMMIT
+              cat ORIGIN_COMMIT
+      args:
+        chdir: /root/src/github.com/openshift/origin
+      register: origin_commit
     - name: gather origin pkg version
       args:
         chdir: /root/src/github.com/openshift/origin
