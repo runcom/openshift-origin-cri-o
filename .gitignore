@@ -1,0 +1,5 @@
+!origin.inventory.template
+origin.inventory
+!hosts.template
+hosts
+*.retry
