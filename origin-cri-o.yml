@@ -81,6 +81,18 @@
               make install && \
               make install.systemd && \
               make install.config
+    - name: build CNI stuff
+      shell: |
+              mkdir -p /root/src/github.com/containernetworking && \
+              git clone https://github.com/containernetworking/cni /root/src/github.com/containernetworking/cni || true && \
+              cd /root/src/github.com/containernetworking/cni && \
+              git pull && \
+              ./build.sh && \
+              mkdir -p /opt/cni/bin && \
+              cp bin/* /opt/cni/bin/ && \
+              mkdir -p /etc/cni/net.d && \
+              cp /root/src/github.com/kubernetes-incubator/cri-o/contrib/cni/10-ocid-bridge.conf /etc/cni/net.d && \
+              cp /root/src/github.com/kubernetes-incubator/cri-o/contrib/cni/99-loopback.conf /etc/cni/net.d
     - name: enable and start CRI-O
       systemd:
         name: ocid
@@ -89,7 +101,3 @@
         daemon_reload: yes
     - debug:
             msg: "ansible-playbook -e openshift_pkg_version='{{ origin_pkg_version.stdout }}' -e oreg_url='openshift/origin-${component}:{{ origin_commit.stdout }}' -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
-
-    # clone needed repos in $GOPATH
-    # containernetworking
-    # build and install CNI stuff
