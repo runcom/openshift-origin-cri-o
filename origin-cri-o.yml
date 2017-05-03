@@ -52,6 +52,7 @@
       shell: |
               hack/build-base-images.sh && \
               OS_BUILD_ENV_PRESERVE=_output/local hack/env OS_ONLY_BUILD_PLATFORMS='linux/amd64' hack/build-rpm-release.sh && \
+              systemctl restart docker && \
               hack/build-images.sh && \
               sed -i 's|go/src|root/src|' _output/local/releases/rpms/origin-local-release.repo && \
               sudo cp _output/local/releases/rpms/origin-local-release.repo /etc/yum.repos.d/
