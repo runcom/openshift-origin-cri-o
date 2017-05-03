@@ -27,7 +27,7 @@
       systemd:
         name: NetworkManager
         state: started
-        enabled: True
+        enabled: yes
     - name: clone origin
       shell: |
               mkdir -p /root/src/github.com/openshift && \
@@ -41,6 +41,11 @@
       args:
         chdir: /root/src/github.com/openshift/origin
       register: origin_commit
+    - name: enable and start docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
     - name: build an origin release
       args:
         chdir: /root/src/github.com/openshift/origin
