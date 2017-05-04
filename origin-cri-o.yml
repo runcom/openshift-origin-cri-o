@@ -31,11 +31,9 @@
         state: started
         enabled: yes
     - name: clone origin
-      shell: |
-              mkdir -p /root/src/github.com/openshift && \
-              git clone https://github.com/openshift/origin /root/src/github.com/openshift/origin || true && \
-              cd /root/src/github.com/openshift/origin && \
-              git pull
+      git:
+        repo: https://github.com/openshift/origin
+        dest: /root/src/github.com/openshift/origin
     - name: enable and start docker
       systemd:
         name: docker
@@ -70,22 +68,30 @@
       register: origin_pkg_version
     - name: update all
       shell: dnf update -y
+    - name: clone runc
+      git:
+        repo: https://github.com/opencontainers/runc
+        dest: /root/src/github.com/opencontainers/runc
+    - name: clone CRI-O
+      git:
+        repo: https://github.com/kubernetes-incubator/cri-o
+        dest: /root/src/github.com/kubernetes-incubator/cri-o
+        version: kube-1.6.1
+    - name: clone CNI
+      git:
+        repo: https://github.com/containernetworking/cni
+        dest: /root/src/github.com/containernetworking/cni
     - name: build runc
       shell: |
-              export GOPATH=/root && \
-              mkdir -p /root/src/github.com/opencontainers && \
-              git clone https://github.com/opencontainers/runc /root/src/github.com/opencontainers/runc || true && \
               cd /root/src/github.com/opencontainers/runc && \
-              git pull && \
+              export GOPATH=/root && \
               make && \
-              make install && \
-              ln -s /usr/local/sbin/runc /usr/bin/runc || true
+              make install
+    - name: link runc
+      file: src=/usr/local/sbin/runc dest=/usr/bin/runc state=link
     - name: build cri-o
       shell: |
-              mkdir -p /root/src/github.com/kubernetes-incubator && \
-              git clone https://github.com/kubernetes-incubator/cri-o /root/src/github.com/kubernetes-incubator/cri-o || true && \
               cd /root/src/github.com/kubernetes-incubator/cri-o && \
-              git checkout kube-1.6.1 && \
               make install.tools && \
               make && \
               make install && \
@@ -94,10 +100,7 @@
               make install.config
     - name: build CNI stuff
       shell: |
-              mkdir -p /root/src/github.com/containernetworking && \
-              git clone https://github.com/containernetworking/cni /root/src/github.com/containernetworking/cni || true && \
               cd /root/src/github.com/containernetworking/cni && \
-              git pull && \
               ./build.sh && \
               mkdir -p /opt/cni/bin && \
               cp bin/* /opt/cni/bin/ && \
@@ -110,9 +113,8 @@
         state: started
         enabled: yes
         daemon_reload: yes
-    - name: python symlink
-      shell: |
-              ln -s /usr/bin/python3 /usr/bin/python || true
+    - name: link python3
+      file: src=/usr/bin/python3 dest=/usr/bin/python state=link
     - debug:
             msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
 
