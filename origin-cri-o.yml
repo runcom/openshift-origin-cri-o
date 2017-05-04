@@ -39,12 +39,14 @@
         name: docker
         state: started
         enabled: yes
+    - name: remove ORIGIN_COMMIT
+      file: path=/root/src/github.com/openshift/origin/ORIGIN_COMMIT state=absent
+    - name: remove ORIGIN_PKG_VERSION
+      file: path=/root/src/github.com/openshift/origin/ORIGIN_PKG_VERSION state=absent
     - name: build an origin release
       args:
         chdir: /root/src/github.com/openshift/origin
       shell: |
-              rm -rf ORIGIN_COMMIT
-              rm -rf ORIGIN_PKG_VERSION
               hack/build-base-images.sh && \
               OS_BUILD_ENV_PRESERVE=_output/local hack/env OS_ONLY_BUILD_PLATFORMS='linux/amd64' hack/build-rpm-release.sh && \
               systemctl restart docker && \
