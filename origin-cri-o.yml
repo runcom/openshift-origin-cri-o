@@ -115,8 +115,6 @@
         state: started
         enabled: yes
         daemon_reload: yes
-    - name: link python3
-      file: src=/usr/bin/python3 dest=/usr/bin/python state=link
     - debug:
             msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
 
