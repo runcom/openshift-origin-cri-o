@@ -8,3 +8,5 @@ disk space. Grab its IP (or hostname), then run:
 The script will setup (using ansible) the machine to be used to provision Openshift
 Origin and CRI-O on it. The playbook outputs a final message with the command to
 be run using `openshift/openshift-ansible`.
+
+**make sure the machine is reachable via SSH w/o password input**
