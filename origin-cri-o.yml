@@ -77,7 +77,7 @@
               git pull && \
               make && \
               make install && \
-              ln -s /usr/local/sbin/runc /usr/bin/runc
+              ln -s /usr/local/sbin/runc /usr/bin/runc || true
     - name: build cri-o
       shell: |
               mkdir -p /root/src/github.com/kubernetes-incubator && \
@@ -87,6 +87,7 @@
               make install.tools && \
               make && \
               make install && \
+              sed -i 's/\/usr\/bin\/ocid/\/usr\/local\/bin\/ocid/g' contrib/systemd/ocid.service
               make install.systemd && \
               make install.config
     - name: build CNI stuff
