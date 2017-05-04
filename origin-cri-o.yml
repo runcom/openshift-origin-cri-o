@@ -108,5 +108,8 @@
         state: started
         enabled: yes
         daemon_reload: yes
+    - name: python symlink
+      shell: |
+              ln -s /usr/bin/python3 /usr/bin/python || true
     - debug:
             msg: "ansible-playbook -e openshift_pkg_version='{{ origin_pkg_version.stdout }}' -e oreg_url='openshift/origin-${component}:{{ origin_commit.stdout }}' -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
