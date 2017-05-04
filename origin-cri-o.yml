@@ -69,7 +69,7 @@
               cat ORIGIN_PKG_VERSION
       register: origin_pkg_version
     - name: update all
-      shell: dnf update -y
+      dnf: name=* state=latest
     - name: clone runc
       git:
         repo: https://github.com/opencontainers/runc
