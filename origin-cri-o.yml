@@ -23,6 +23,7 @@
         - libselinux-devel
         - pkgconfig
         - skopeo-containers
+        - python-dbus
     - name: enable and start NetworkManager
       systemd:
         name: NetworkManager
