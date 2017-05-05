@@ -14,7 +14,7 @@ deployment_type=origin
 #containerized=true
 openshift_router_selector='router=true'
 openshift_registry_selector='registry=true'
-openshift_node_kubelet_args={'container-runtime-endpoint': ['/var/run/ocid.sock'], 'container-runtime': ['remote'], 'runtime-request-timeout': ['15m'], 'enable-cri': ['true']}
+openshift_node_kubelet_args={'image-service-endpoint': ['/var/run/ocid.sock'], 'container-runtime-endpoint': ['/var/run/ocid.sock'], 'container-runtime': ['remote'], 'runtime-request-timeout': ['15m'], 'enable-cri': ['true']}
 enable_excluders='false'
 
 # enable htpasswd auth
