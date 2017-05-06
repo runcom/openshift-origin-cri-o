@@ -10,3 +10,10 @@ Origin and CRI-O on it. The playbook outputs a final message with the command to
 be run using `openshift/openshift-ansible`.
 
 **make sure the machine is reachable via SSH w/o password input**
+
+```
+ssh-copy-id root@<ip or hostname>
+sudo virsh destroy VMNAME
+sudo virsh setmaxmem VMNAME 8G --config
+sudo virsh setmem 8G --config
+```
