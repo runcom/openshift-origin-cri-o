@@ -1,4 +1,4 @@
-_tested only on Fedora 25_
+_tested only with Fedora 25 virtual machines!_
 
 Create a Fedora machine (I use libvirt) with at least 8G RAM, 2 vCPU and 20G of
 disk space. Grab its IP (or hostname), then run:
