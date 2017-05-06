@@ -53,6 +53,8 @@
               hack/build-images.sh && \
               sed -i 's|go/src|root/src|' _output/local/releases/rpms/origin-local-release.repo && \
               sudo cp _output/local/releases/rpms/origin-local-release.repo /etc/yum.repos.d/
+      tags:
+        - buildorigin
     - name: gather origin version
       shell: |
               git log -1 --pretty=%h > ORIGIN_COMMIT
@@ -83,6 +85,16 @@
       git:
         repo: https://github.com/containernetworking/cni
         dest: /root/src/github.com/containernetworking/cni
+    - name: clone skopeo
+      git:
+        repo: https://github.com/projectatomic/skopeo
+        dest: /root/src/github.com/projectatomic/skopeo
+    - name: build skopeo
+      shell: |
+              cd /root/src/github.com/projectatomic/skopeo && \
+              export GOPATH=/root && \
+              make binary-local && \
+              make install-binary
     - name: build runc
       shell: |
               cd /root/src/github.com/opencontainers/runc && \
@@ -97,7 +109,6 @@
               make install.tools && \
               make && \
               make install && \
-              sed -i 's/\/usr\/bin\/ocid/\/usr\/local\/bin\/ocid/g' contrib/systemd/ocid.service
               make install.systemd && \
               make install.config
     - name: build CNI stuff
@@ -115,6 +126,14 @@
         state: started
         enabled: yes
         daemon_reload: yes
+    - name: gather openshift docker images
+      shell: |
+              docker images | awk '{if($2 != "latest" && $1 !~ "docker.io") print $1 ":" $2}' | tail -n +2 | xargs
+      register: references
+    - name: import openshift docker images into CRI-O
+      command: "skopeo copy docker-daemon:{{ item }} containers-storage:{{ item }}"
+      with_items:
+            - "{{ references.stdout.split(' ') }}"
     - debug:
             msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
 
