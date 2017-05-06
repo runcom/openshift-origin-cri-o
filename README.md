@@ -16,4 +16,5 @@ ssh-copy-id root@<ip or hostname>
 sudo virsh destroy VMNAME
 sudo virsh setmaxmem VMNAME 8G --config
 sudo virsh setmem 8G --config
+sudo virsh start VMNAME
 ```
