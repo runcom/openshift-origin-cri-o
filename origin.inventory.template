@@ -18,6 +18,8 @@ openshift_node_kubelet_args={'image-service-endpoint': ['/var/run/ocid.sock'], '
 enable_excluders='false'
 
 # enable htpasswd auth
+# admin:OriginAdmin
+# user:OriginUser
 openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
 openshift_master_htpasswd_users={'admin': '$apr1$zgSjCrLt$1KSuj66CggeWSv.D.BXOA1', 'user': '$apr1$.gw8w9i1$ln9bfTRiD6OwuNTG5LvW50'}
 
