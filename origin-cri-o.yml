@@ -119,6 +119,13 @@
               cp bin/* /opt/cni/bin/ && \
               mkdir -p /etc/cni/net.d && \
               cp /root/src/github.com/kubernetes-incubator/cri-o/contrib/cni/99-loopback.conf /etc/cni/net.d
+    - name: remove journald log driver on F26 docker-1.13 causing panic
+      replace:
+              regexp: ' --log-driver=journald'
+              replace: ''
+              path: /etc/sysconfig/docker
+              backup: yes
+      when: ansible_distribution == 'Fedora' and ansible_distribution_version == '26'
     - name: enable and start CRI-O
       systemd:
         name: ocid
