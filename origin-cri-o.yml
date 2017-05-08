@@ -159,5 +159,5 @@
             - "{{ references.stdout.split(' ') }}"
       when: clone_origin.changed
     - debug:
-            msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
+            msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout[0:7] }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout[0:7] }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
 
