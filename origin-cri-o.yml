@@ -34,6 +34,7 @@
       git:
         repo: https://github.com/openshift/origin
         dest: /root/src/github.com/openshift/origin
+      register: clone_origin
     - name: enable and start docker
       systemd:
         name: docker
@@ -41,11 +42,14 @@
         enabled: yes
     - name: remove ORIGIN_COMMIT
       file: path=/root/src/github.com/openshift/origin/ORIGIN_COMMIT state=absent
+      when: clone_origin.changed
     - name: remove ORIGIN_PKG_VERSION
       file: path=/root/src/github.com/openshift/origin/ORIGIN_PKG_VERSION state=absent
+      when: clone_origin.changed
     - name: build an origin release
       args:
         chdir: /root/src/github.com/openshift/origin
+      when: clone_origin.changed
       shell: |
               hack/build-base-images.sh && \
               OS_BUILD_ENV_PRESERVE=_output/local hack/env OS_ONLY_BUILD_PLATFORMS='linux/amd64' hack/build-rpm-release.sh && \
@@ -59,10 +63,12 @@
       shell: |
               git log -1 --pretty=%h > ORIGIN_COMMIT
               cat ORIGIN_COMMIT
+      when: clone_origin.changed
       args:
         chdir: /root/src/github.com/openshift/origin
       register: origin_commit
     - name: gather origin pkg version
+      when: clone_origin.changed
       args:
         chdir: /root/src/github.com/openshift/origin
         executable: /bin/bash
@@ -76,33 +82,41 @@
       git:
         repo: https://github.com/opencontainers/runc
         dest: /root/src/github.com/opencontainers/runc
+      register: clone_runc
     - name: clone CRI-O
       git:
         repo: https://github.com/kubernetes-incubator/cri-o
         dest: /root/src/github.com/kubernetes-incubator/cri-o
         version: kube-1.6.1
+        force: yes
+      register: clone_crio
     - name: clone CNI
       git:
         repo: https://github.com/containernetworking/cni
         dest: /root/src/github.com/containernetworking/cni
+      register: clone_cni
     - name: clone skopeo
       git:
         repo: https://github.com/projectatomic/skopeo
         dest: /root/src/github.com/projectatomic/skopeo
+      register: clone_skopeo
     - name: build skopeo
       shell: |
               cd /root/src/github.com/projectatomic/skopeo && \
               export GOPATH=/root && \
               make binary-local && \
               make install-binary
+      when: clone_skopeo.changed
     - name: build runc
       shell: |
               cd /root/src/github.com/opencontainers/runc && \
               export GOPATH=/root && \
               make && \
               make install
+      when: clone_runc.changed
     - name: link runc
       file: src=/usr/local/sbin/runc dest=/usr/bin/runc state=link
+      when: clone_runc.changed
     - name: build cri-o
       shell: |
               cd /root/src/github.com/kubernetes-incubator/cri-o && \
@@ -111,6 +125,7 @@
               make install && \
               make install.systemd && \
               make install.config
+      when: clone_crio.changed
     - name: build CNI stuff
       shell: |
               cd /root/src/github.com/containernetworking/cni && \
@@ -119,6 +134,7 @@
               cp bin/* /opt/cni/bin/ && \
               mkdir -p /etc/cni/net.d && \
               cp /root/src/github.com/kubernetes-incubator/cri-o/contrib/cni/99-loopback.conf /etc/cni/net.d
+      when: clone_cni.changed
     - name: remove journald log driver on F26 docker-1.13 causing panic
       replace:
               regexp: ' --log-driver=journald'
@@ -136,10 +152,12 @@
       shell: |
               docker images | awk '{if($2 != "latest" && $1 !~ "docker.io") print $1 ":" $2}' | tail -n +2 | xargs
       register: references
+      when: clone_origin.changed
     - name: import openshift docker images into CRI-O
       command: "skopeo copy docker-daemon:{{ item }} containers-storage:{{ item }}"
       with_items:
             - "{{ references.stdout.split(' ') }}"
+      when: clone_origin.changed
     - debug:
             msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
 
