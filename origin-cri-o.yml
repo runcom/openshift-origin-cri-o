@@ -35,11 +35,6 @@
         repo: https://github.com/openshift/origin
         dest: /root/src/github.com/openshift/origin
       register: clone_origin
-    - name: enable and start docker
-      systemd:
-        name: docker
-        state: started
-        enabled: yes
     - name: remove journald log driver on F26 docker-1.13 causing panic
       replace:
               regexp: ' --log-driver=journald'
@@ -47,6 +42,11 @@
               path: /etc/sysconfig/docker
               backup: yes
       when: ansible_distribution == 'Fedora' and ansible_distribution_version == '26'
+    - name: enable and start docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
     - name: remove ORIGIN_COMMIT
       file: path=/root/src/github.com/openshift/origin/ORIGIN_COMMIT state=absent
       when: clone_origin.changed
