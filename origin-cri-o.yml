@@ -43,13 +43,15 @@
     - name: remove ORIGIN_COMMIT
       file: path=/root/src/github.com/openshift/origin/ORIGIN_COMMIT state=absent
       when: clone_origin.changed
+      register: remove_origin_commit
     - name: remove ORIGIN_PKG_VERSION
       file: path=/root/src/github.com/openshift/origin/ORIGIN_PKG_VERSION state=absent
       when: clone_origin.changed
+      register: remove_origin_pkg_version
     - name: build an origin release
       args:
         chdir: /root/src/github.com/openshift/origin
-      when: clone_origin.changed
+      when: clone_origin.changed and remove_origin_commit.changed and remove_origin_pkg_version.changed
       shell: |
               hack/build-base-images.sh && \
               OS_BUILD_ENV_PRESERVE=_output/local hack/env OS_ONLY_BUILD_PLATFORMS='linux/amd64' hack/build-rpm-release.sh && \
