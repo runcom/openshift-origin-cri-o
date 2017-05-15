@@ -49,12 +49,8 @@
         enabled: yes
     - name: remove ORIGIN_COMMIT
       file: path=/root/src/github.com/openshift/origin/ORIGIN_COMMIT state=absent
-      when: clone_origin.changed
-      register: remove_origin_commit
     - name: remove ORIGIN_PKG_VERSION
       file: path=/root/src/github.com/openshift/origin/ORIGIN_PKG_VERSION state=absent
-      when: clone_origin.changed
-      register: remove_origin_pkg_version
     - name: build an origin release
       args:
         chdir: /root/src/github.com/openshift/origin
@@ -71,12 +67,10 @@
       shell: |
               git log -1 --pretty=%h > ORIGIN_COMMIT
               cat ORIGIN_COMMIT
-      when: clone_origin.changed
       args:
         chdir: /root/src/github.com/openshift/origin
       register: origin_commit
     - name: gather origin pkg version
-      when: clone_origin.changed
       args:
         chdir: /root/src/github.com/openshift/origin
         executable: /bin/bash
@@ -93,9 +87,9 @@
       register: clone_runc
     - name: clone CRI-O
       git:
-        repo: https://github.com/kubernetes-incubator/cri-o
+        repo: https://github.com/runcom/ocid-1
         dest: /root/src/github.com/kubernetes-incubator/cri-o
-        version: kube-1.6.1
+        version: kube-1.6.1-origin
         force: yes
       register: clone_crio
     - name: clone CNI
@@ -153,12 +147,10 @@
       shell: |
               docker images | awk '{if($2 != "latest" && $1 !~ "docker.io") print $1 ":" $2}' | tail -n +2 | xargs
       register: references
-      when: clone_origin.changed
     - name: import openshift docker images into CRI-O
       command: "skopeo copy docker-daemon:{{ item }} containers-storage:{{ item }}"
       with_items:
             - "{{ references.stdout.split(' ') }}"
-      when: clone_origin.changed
     - debug:
-            msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout[0:7] }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout[0:7] }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
+            msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout[0:7] }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
 
