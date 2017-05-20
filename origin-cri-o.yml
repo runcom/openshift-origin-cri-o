@@ -139,7 +139,7 @@
       when: clone_cni.changed
     - name: enable and start CRI-O
       systemd:
-        name: ocid
+        name: crio
         state: started
         enabled: yes
         daemon_reload: yes
