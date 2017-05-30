@@ -94,8 +94,8 @@
       register: clone_crio
     - name: clone CNI
       git:
-        repo: https://github.com/containernetworking/cni
-        dest: /root/src/github.com/containernetworking/cni
+        repo: https://github.com/containernetworking/plugins
+        dest: /root/src/github.com/containernetworking/plugins
       register: clone_cni
     - name: clone skopeo
       git:
@@ -130,7 +130,7 @@
       when: clone_crio.changed
     - name: build CNI stuff
       shell: |
-              cd /root/src/github.com/containernetworking/cni && \
+              cd /root/src/github.com/containernetworking/plugins && \
               ./build.sh && \
               mkdir -p /opt/cni/bin && \
               cp bin/* /opt/cni/bin/ && \
