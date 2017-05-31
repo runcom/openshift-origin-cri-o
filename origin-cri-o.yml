@@ -2,49 +2,52 @@
 - hosts: all
   remote_user: root
   tasks:
-    - name: install stuff
-      dnf: name={{ item }} state=latest
+    - name: Make sure we have all required packages
+      yum:
+        name: "{{ item }}"
+        state: latest
       with_items:
-        - docker
+        - centos-release-openshift-origin
+        - wget
         - git
-        - polkit
-        - vim
-        - NetworkManager
+        - make
+        - gcc
+        - tar
+        - libseccomp-devel
         - golang
+        - glib2-devel
+        - glibc-static
+        - container-selinux
         - btrfs-progs-devel
         - device-mapper-devel
-        - glib2-devel
         - glibc-devel
-        - glibc-static
         - gpgme-devel
         - libassuan-devel
         - libgpg-error-devel
-        - libseccomp-devel
-        - libselinux-devel
         - pkgconfig
-        - skopeo-containers
-        - python3-dbus
-        - python-dbus
         - json-glib-devel
+        - skopeo-containers
+        - NetworkManager
+        - docker
+    - name: enable centos paas testing repo
+      command: "yum-config-manager --enable centos-openshift-origin-testing"
+    #- name: edit testing repo to use v3.6.x
+      # /etc/yum.repos.d/CentOS-OpenShift-Origin.repo
+      # baseurl=http://buildlogs.centos.org/centos/7/paas/x86_64/openshift-origin/
+      # baseurl=http://buildlogs.centos.org/centos/7/paas/x86_64/openshift-origin36/
+      # yum clean all
     - name: enable and start NetworkManager
       systemd:
         name: NetworkManager
         state: started
         enabled: yes
-    - name: remove journald log driver on F26 docker-1.13 causing panic
-      replace:
-              regexp: ' --log-driver=journald'
-              replace: ''
-              path: /etc/sysconfig/docker
-              backup: yes
-      when: ansible_distribution == 'Fedora' and ansible_distribution_version == '26'
     - name: enable and start docker
       systemd:
         name: docker
         state: started
         enabled: yes
     - name: update all
-      dnf: name=* state=latest
+      yum: name=* state=latest
     - name: clone runc
       git:
         repo: https://github.com/opencontainers/runc
@@ -73,7 +76,7 @@
       shell: |
               cd /root/src/github.com/opencontainers/runc && \
               export GOPATH=/root && \
-              make && \
+              make BUILDTAGS="seccomp selinux" && \
               make install
     - name: link runc
       file: src=/usr/local/sbin/runc dest=/usr/bin/runc state=link
@@ -99,6 +102,3 @@
         state: started
         enabled: yes
         daemon_reload: yes
-    #- debug:
-            #msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout[0:7] }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
-
