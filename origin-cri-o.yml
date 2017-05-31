@@ -30,11 +30,6 @@
         name: NetworkManager
         state: started
         enabled: yes
-    - name: clone origin
-      git:
-        repo: https://github.com/openshift/origin
-        dest: /root/src/github.com/openshift/origin
-      register: clone_origin
     - name: remove journald log driver on F26 docker-1.13 causing panic
       replace:
               regexp: ' --log-driver=journald'
@@ -47,37 +42,6 @@
         name: docker
         state: started
         enabled: yes
-    - name: remove ORIGIN_COMMIT
-      file: path=/root/src/github.com/openshift/origin/ORIGIN_COMMIT state=absent
-    - name: remove ORIGIN_PKG_VERSION
-      file: path=/root/src/github.com/openshift/origin/ORIGIN_PKG_VERSION state=absent
-    - name: build an origin release
-      args:
-        chdir: /root/src/github.com/openshift/origin
-      shell: |
-              hack/build-base-images.sh && \
-              OS_BUILD_ENV_PRESERVE=_output/local hack/env OS_ONLY_BUILD_PLATFORMS='linux/amd64' hack/build-rpm-release.sh && \
-              systemctl restart docker && \
-              hack/build-images.sh && \
-              sed -i 's|go/src|root/src|' _output/local/releases/rpms/origin-local-release.repo && \
-              sudo cp _output/local/releases/rpms/origin-local-release.repo /etc/yum.repos.d/
-      tags:
-        - buildorigin
-    - name: gather origin version
-      shell: |
-              git log -1 --pretty=%h > ORIGIN_COMMIT
-              cat ORIGIN_COMMIT
-      args:
-        chdir: /root/src/github.com/openshift/origin
-      register: origin_commit
-    - name: gather origin pkg version
-      args:
-        chdir: /root/src/github.com/openshift/origin
-        executable: /bin/bash
-      shell: |
-              ( source hack/lib/init.sh; os::build::rpm::get_nvra_vars; echo "-${OS_RPM_VERSION}-${OS_RPM_RELEASE}" ) > ORIGIN_PKG_VERSION
-              cat ORIGIN_PKG_VERSION
-      register: origin_pkg_version
     - name: update all
       dnf: name=* state=latest
     - name: clone runc
@@ -87,9 +51,9 @@
       register: clone_runc
     - name: clone CRI-O
       git:
-        repo: https://github.com/runcom/ocid-1
+        repo: https://github.com/kubernetes-incubator/cri-o
         dest: /root/src/github.com/kubernetes-incubator/cri-o
-        version: kube-1.6.1-origin
+        version: kube-1.6.x
         force: yes
       register: clone_crio
     - name: clone CNI
@@ -143,14 +107,6 @@
         state: started
         enabled: yes
         daemon_reload: yes
-    - name: gather openshift docker images
-      shell: |
-              docker images | awk '{if($2 != "latest" && $1 !~ "docker.io") print $1 ":" $2}' | tail -n +2 | xargs
-      register: references
-    - name: import openshift docker images into CRI-O
-      command: "skopeo copy docker-daemon:{{ item }} containers-storage:{{ item }}"
-      with_items:
-            - "{{ references.stdout.split(' ') }}"
-    - debug:
-            msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout[0:7] }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
+    #- debug:
+            #msg: "ansible-playbook -e openshift_pkg_version={{ origin_pkg_version.stdout }} -e oreg_url='openshift/origin-${component}:'{{ origin_commit.stdout[0:7] }} -vvvv -i {{ inventory_dir }}/origin.inventory ./playbooks/byo/config.yml"
 
