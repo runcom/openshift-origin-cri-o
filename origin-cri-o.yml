@@ -48,11 +48,14 @@
         state: present
     - name: enable centos paas testing repo
       command: "yum-config-manager --enable centos-openshift-origin-testing"
-    #- name: edit testing repo to use v3.6.x
-      # /etc/yum.repos.d/CentOS-OpenShift-Origin.repo
-      # baseurl=http://buildlogs.centos.org/centos/7/paas/x86_64/openshift-origin/
-      # baseurl=http://buildlogs.centos.org/centos/7/paas/x86_64/openshift-origin36/
-      # yum clean all
+    - name: edit testing repo to use v3.6.x
+      replace:
+        regexp: 'baseurl=http:\/\/buildlogs\.centos\.org\/centos\/7\/paas\/x86_64\/openshift-origin\/'
+        replace: 'baseurl=http://buildlogs.centos.org/centos/7/paas/x86_64/openshift-origin36/'
+        name: /etc/yum.repos.d/CentOS-OpenShift-Origin.repo
+        backup: yes
+    - name: yum clean
+      command: "yum clean all"
     - name: enable and start NetworkManager
       systemd:
         name: NetworkManager
