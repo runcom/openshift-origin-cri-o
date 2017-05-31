@@ -113,6 +113,25 @@
               cp bin/* /opt/cni/bin/ && \
               mkdir -p /etc/cni/net.d && \
               cp /root/src/github.com/kubernetes-incubator/cri-o/contrib/cni/99-loopback.conf /etc/cni/net.d
+    - name: run CRI-O with systemd cgroup manager
+      replace:
+        regexp: 'cgroupfs'
+        replace: 'systemd'
+        name: /etc/crio/crio.conf
+        backup: yes
+    - name: run with overlay2
+      replace:
+        regexp: 'storage_driver = ""'
+        replace: 'storage_driver = "overlay2"'
+        name: /etc/crio/crio.conf
+        backup: yes
+    - name: add overlay2 storage opts on RHEL/CentOS
+      lineinfile:
+        dest: /etc/crio/crio.conf
+        line: '"overlay2.override_kernel_check=1"'
+        insertafter: 'storage_option = \['
+        regexp: 'overlay2\.override_kernel_check=1'
+        state: present
     - name: enable and start CRI-O
       systemd:
         name: crio
