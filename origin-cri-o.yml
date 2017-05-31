@@ -48,41 +48,34 @@
       git:
         repo: https://github.com/opencontainers/runc
         dest: /root/src/github.com/opencontainers/runc
-      register: clone_runc
     - name: clone CRI-O
       git:
         repo: https://github.com/kubernetes-incubator/cri-o
         dest: /root/src/github.com/kubernetes-incubator/cri-o
         version: kube-1.6.x
         force: yes
-      register: clone_crio
     - name: clone CNI
       git:
         repo: https://github.com/containernetworking/plugins
         dest: /root/src/github.com/containernetworking/plugins
-      register: clone_cni
     - name: clone skopeo
       git:
         repo: https://github.com/projectatomic/skopeo
         dest: /root/src/github.com/projectatomic/skopeo
-      register: clone_skopeo
     - name: build skopeo
       shell: |
               cd /root/src/github.com/projectatomic/skopeo && \
               export GOPATH=/root && \
               make binary-local && \
               make install-binary
-      when: clone_skopeo.changed
     - name: build runc
       shell: |
               cd /root/src/github.com/opencontainers/runc && \
               export GOPATH=/root && \
               make && \
               make install
-      when: clone_runc.changed
     - name: link runc
       file: src=/usr/local/sbin/runc dest=/usr/bin/runc state=link
-      when: clone_runc.changed
     - name: build cri-o
       shell: |
               cd /root/src/github.com/kubernetes-incubator/cri-o && \
@@ -91,7 +84,6 @@
               make install && \
               make install.systemd && \
               make install.config
-      when: clone_crio.changed
     - name: build CNI stuff
       shell: |
               cd /root/src/github.com/containernetworking/plugins && \
@@ -100,7 +92,6 @@
               cp bin/* /opt/cni/bin/ && \
               mkdir -p /etc/cni/net.d && \
               cp /root/src/github.com/kubernetes-incubator/cri-o/contrib/cni/99-loopback.conf /etc/cni/net.d
-      when: clone_cni.changed
     - name: enable and start CRI-O
       systemd:
         name: crio
