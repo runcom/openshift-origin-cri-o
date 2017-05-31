@@ -25,6 +25,7 @@
         - skopeo-containers
         - python3-dbus
         - python-dbus
+        - json-glib-devel
     - name: enable and start NetworkManager
       systemd:
         name: NetworkManager
