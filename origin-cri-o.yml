@@ -29,6 +29,7 @@
         - skopeo-containers
         - NetworkManager
         - docker
+        - ostree-devel
     - name: Make testing directories to conform to testing standards
       file:
         path: "{{ item }}"
@@ -98,8 +99,9 @@
               export GOPATH=/root && \
               make BUILDTAGS="seccomp selinux" && \
               make install
-    - name: link runc
-      file: src=/usr/local/sbin/runc dest=/usr/bin/runc state=link
+    - name: copy runc
+      shell: |
+              cp /usr/local/sbin/runc /usr/bin/run
     - name: build cri-o
       shell: |
               cd /root/src/github.com/kubernetes-incubator/cri-o && \
